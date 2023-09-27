@@ -1,16 +1,8 @@
 ﻿using EntityModelTest;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Dynamic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Exercise0009
 {
@@ -37,152 +29,125 @@ namespace Exercise0009
         {
             while (true)
             {
-                try
+                Console.Clear();
+                Console.WriteLine("0- Esci dal programma\n1- Cambia utente\n2- Crea utente\n3- Visualizza ordini\n4- Visualizza dettagli ordine\n5- Fai ordine");
+                switch (GetInput().KeyChar)
                 {
-                    Console.Clear();
-                    Console.WriteLine("0- Esci dal programma\n1- Cambia utente\n2- Crea utente\n3- Visualizza ordini\n4- Visualizza dettagli ordine\n5- Fai ordine");
-                    switch (GetInput().KeyChar)
-                    {
-                        case '0': //return
-                            return;
+                    case '0': //return
+                        return;
 
-                        case '1': //login
-                            Login();
-                            break;
+                    case '1': //login
+                        Login();
+                        break;
 
-                        case '2': // crea utente
+                    case '2': // crea utente
 
-                            Console.WriteLine("Inserisci Utente");
-                            var user = Console.ReadLine();
-                            Console.WriteLine("Inserisci Password");
-                            var psw = Console.ReadLine();
-                            try
-                            {
-                                if (InsertUser(user, psw))
-                                {
-                                    Console.WriteLine("Utente creato con successo");
-                                }
-                                else
-                                {
-                                    Console.WriteLine("Creazione Utente fallita");
-                                }
-                                Thread.Sleep(1000);
-                            }
-                            catch(System.Data.Entity.Infrastructure.DbUpdateException)
-                            {
-                                Console.WriteLine();
-                                Console.ReadKey();
-                            }
-                            break;
-
-                        case '3': // Visualizza ordine
-                            Console.Clear();
-                            WriteRecord(GetOrders());
+                        Console.WriteLine("Inserisci Utente");
+                        var user = Console.ReadLine();
+                        Console.WriteLine("Inserisci Password");
+                        var psw = Console.ReadLine();
+                        try
+                        {
+                            InsertUser(user, psw);
+                            Console.WriteLine("Utente creato con successo");
+                            Thread.Sleep(1000);
+                        }
+                        catch (System.Data.Entity.Infrastructure.DbUpdateException)
+                        {
+                            Console.WriteLine($"Esiste già un utente [{user}]");
                             Console.ReadKey();
-                            break;
+                        }
+                        break;
 
-                        case '4': // Dettagli ordine
+                    case '3': // Visualizza ordine
+                        Console.Clear();
+                        WriteRecord(GetOrders());
+                        Console.ReadKey();
+                        break;
+
+                    case '4': // Dettagli ordine
+                        Console.Clear();
+                        Console.WriteLine("Inserisci id");
+                        try
+                        {
+                            var i = int.Parse(Console.ReadLine());
                             Console.Clear();
-                            Console.WriteLine("Inserisci id");
-                            try
-                            {
-                                var i = int.Parse(Console.ReadLine());
-                                Console.Clear();
-                                WriteOrderSpecifics(GetOrderSpecifics(i));
-                            }
-                            catch (FormatException)
-                            {
-                                Console.WriteLine("Valore inserito non è del tipo corretto");
-                            }
-                            catch (ArgumentOutOfRangeException)
-                            {
-                                Console.WriteLine("Valore inserito non è presente nel db");
-                            }
-                            Console.ReadKey();
-                            break;
+                            WriteOrderSpecifics(GetOrderSpecifics(i));
+                        }
+                        catch (FormatException)
+                        {
+                            Console.WriteLine("Valore inserito non è del tipo corretto");
+                        }
+                        catch(System.Reflection.TargetException)
+                        {
+                            Console.WriteLine("Valore inserito non è presente nel db");
+                        }
+                        Console.ReadKey();
+                        break;
 
-                        case '5': // Fai ordine
-                            try
+                    case '5': // Fai ordine
+                        try
+                        {
+                            Console.WriteLine("Inserisci Customer");
+                            var customer = GetCustomer(Console.ReadLine());
+                            var items = new Dictionary<string, List<int>>();
+                            bool c1 = true;
+                            while (c1)
                             {
-                                Console.WriteLine("Inserisci Customer");
-                                var customer = GetCustomer(Console.ReadLine());
-                                var items = new Dictionary<string, List<int>>();
-                                bool c1 = true;
-                                while (c1)
+
+                                Console.WriteLine("Inserisci Item");
                                 {
+                                    var item = GetItem(Console.ReadLine());
 
-                                    Console.WriteLine("Inserisci Item");
+                                    items[item.item] = new List<int>();
+
+                                    Console.WriteLine("Inserisci quantità");
+                                    items[item.item].Add(int.Parse(Console.ReadLine()));
+                                    Console.WriteLine("Inserisci prezzo");
+                                    items[item.item].Add(int.Parse(Console.ReadLine()));
+                                }
+
+                                bool c2 = true;
+                                while (c2)
+                                {
+                                    Console.Clear();
+                                    Console.WriteLine("Vuoi continuare? (y/n)");
+                                    switch (GetInput().Key)
                                     {
-                                        var item = GetItem(Console.ReadLine());
-
-                                        items[item.item] = new List<int>();
-
-                                        Console.WriteLine("Inserisci quantità");
-                                        items[item.item].Add(int.Parse(Console.ReadLine()));
-                                        Console.WriteLine("Inserisci prezzo");
-                                        items[item.item].Add(int.Parse(Console.ReadLine()));
-                                    }
-
-                                    bool c2 = true;
-                                    while (c2)
-                                    {
-                                        Console.Clear();
-                                        Console.WriteLine("Vuoi continuare? (y/n)");
-                                        switch (GetInput().Key)
-                                        {
-                                            case ConsoleKey.Y:
-                                                c2 = false;
-                                                break;
-                                            case ConsoleKey.N:
-                                                c1 = false;
-                                                c2 = false;
-                                                break;
-                                        }
+                                        case ConsoleKey.Y:
+                                            c2 = false;
+                                            break;
+                                        case ConsoleKey.N:
+                                            c1 = false;
+                                            c2 = false;
+                                            break;
                                     }
                                 }
-
-                                InsertOrder(customer.name, items);
-
                             }
-                            catch (ArgumentOutOfRangeException)
-                            {
-                                Console.WriteLine("Valore inserito non presente nel DB");
-                                Console.ReadKey();
-                            }
-                            break;
 
-                        default:
-                            break;
-                    }
-                }
-                catch
-                {
+                            InsertOrder(customer.name, items);
 
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            Console.WriteLine("Valore inserito non presente nel DB");
+                            Console.ReadKey();
+                        }
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
 
-        static bool InsertUser(string utente, string psw)
+        static void InsertUser(string utente, string psw)
         {
-            
-            bool res = true;
-
-            try
+            using (var connection = new ordersEntities())
             {
-                using (var connection = new ordersEntities())
-                {
-                    connection.users.Add(new users() { username = utente, psw = psw});
-                    connection.SaveChanges();
-                }
+                connection.users.Add(new users() { username = utente, psw = psw});
+                connection.SaveChanges();
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.GetType());
-                Console.ReadKey();
-                res = false;
-            }
-
-            return res;
         }
 
         static bool Login()
@@ -279,18 +244,26 @@ namespace Exercise0009
             {
                 foreach (var record in connection.orders)
                 {
-                    var item = new Dictionary<string, string>();
-                    var tot = 0;
-                    foreach(var order in connection.orderitems.Where(x => x.orderid == record.orderid))
+                    try
                     {
-                        tot += order.price*order.qty;
+                        var item = new Dictionary<string, string>();
+                        var tot = 0;
+                        foreach(var order in connection.orderitems.Where(x => x.orderid == record.orderid))
+                        {
+                            tot += order.price*order.qty;
+                        }
+                        item["id"] = record.orderid.ToString();
+                        item["customer"] = record.customers.name;
+                        item["order date"] = record.orderdate.ToString();
+                        item["total"] = tot.ToString();
+                        res.Add(item);
                     }
-                    item["id"] = record.orderid.ToString();
-                    item["customer"] = record.customers.name;
-                    item["order date"] = record.orderdate.ToString();
-                    item["total"] = tot.ToString();
-                    res.Add(item);
+                    catch
+                    {
+                        connection.orders.Remove(record);
+                    }
                 }
+                connection.SaveChanges();
             }
 
             return res;
@@ -302,13 +275,7 @@ namespace Exercise0009
 
             using (var connection = new ordersEntities())
             {
-
                 var record = connection.orders.Find(id);
-
-                if (record == null)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
 
                 foreach (var order in connection.orderitems.Where(x => x.orderid == record.orderid))
                 {
@@ -321,7 +288,7 @@ namespace Exercise0009
                     res.Add(item);
                 }
             }
-            return (res.Count > 0) ? res : throw new ArgumentOutOfRangeException();
+            return res;
         }
 
         static void WriteRecord(ICollection<Dictionary<string, string>> records)
