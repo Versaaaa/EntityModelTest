@@ -133,6 +133,17 @@ namespace Exercise0009
                             Console.WriteLine("Valore inserito non presente nel DB");
                             Console.ReadKey();
                         }
+                        catch (FormatException)
+                        { 
+                            Console.WriteLine("Valore inserito non è del tipo corretto");
+                            Console.ReadKey();
+                        }
+                        catch (ArgumentException)
+                        {
+                            Console.WriteLine("Impossibile effettuare ordine");
+                            Console.ReadKey();
+                        }
+
                         break;
 
                     default:
@@ -222,19 +233,17 @@ namespace Exercise0009
 
         static bool LoginCheck(string username, string psw)
         {
-            var res = false;
             using(var connection = new ordersEntities())
             {
-                var record = connection.users.Find(username);
-                if (!(record == null))
+                try
                 {
-                    if (record.psw.Equals(psw))
-                    {
-                        res = true;
-                    }
+                    return connection.users.Find(username).psw.Equals(psw);
+                }
+                catch(NullReferenceException)
+                {
+                    return false;
                 }
             }
-            return res;
         }
 
         static List<Dictionary<string, string>> GetOrders()
@@ -344,24 +353,22 @@ namespace Exercise0009
         {
             using (var connection = new ordersEntities())
             {
-                try
+                int i = connection.orders.OrderByDescending(x => x.orderid).FirstOrDefault().orderid + 1;
+
+                connection.orders.Add(new orders() {orderid = i, customername = customer , orderdate = DateTime.Now});
+
+                foreach (var key in items.Keys)
                 {
-                    int i = connection.orders.OrderByDescending(x => x.orderid).FirstOrDefault().orderid + 1;
+                    var qty = items[key][0];
+                    var price = items[key][1];
 
-                    connection.orders.Add(new orders() {orderid = i, customername = customer , orderdate = DateTime.Now});
-
-                    foreach (var key in items.Keys)
+                    if (qty < 1 || price < 0)
                     {
-                        connection.orderitems.Add(new orderitems() { orderid = i, itemname = key, qty = items[key][0], price = items[key][1] });
+                        throw new ArgumentException();
                     }
-
-                    connection.SaveChanges();
+                    connection.orderitems.Add(new orderitems() { orderid = i, itemname = key, qty = qty, price = price });
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex);
-                    Console.ReadKey();
-                }
+                connection.SaveChanges();
             }
         }
     }
