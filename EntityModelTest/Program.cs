@@ -48,7 +48,7 @@ namespace Exercise0009
                         var psw = Console.ReadLine();
                         try
                         {
-                            InsertUser(user, psw);
+                            DBWriter.InsertUser(user, psw);
                             Console.WriteLine("Utente creato con successo");
                             Thread.Sleep(1000);
                         }
@@ -61,7 +61,7 @@ namespace Exercise0009
 
                     case '3': // Visualizza ordine
                         Console.Clear();
-                        WriteRecord(GetOrders());
+                        WriteRecord(DBReader.GetOrders());
                         Console.ReadKey();
                         break;
 
@@ -72,7 +72,7 @@ namespace Exercise0009
                         {
                             var i = int.Parse(Console.ReadLine());
                             Console.Clear();
-                            WriteOrderSpecifics(GetOrderSpecifics(i));
+                            WriteOrderSpecifics(DBReader.GetOrderSpecifics(i));
                         }
                         catch (FormatException)
                         {
@@ -89,7 +89,7 @@ namespace Exercise0009
                         try
                         {
                             Console.WriteLine("Inserisci Customer");
-                            var customer = GetCustomer(Console.ReadLine());
+                            var customer = DBReader.GetCustomer(Console.ReadLine());
                             var items = new Dictionary<string, List<int>>();
                             bool c1 = true;
                             while (c1)
@@ -97,7 +97,7 @@ namespace Exercise0009
 
                                 Console.WriteLine("Inserisci Item");
                                 {
-                                    var item = GetItem(Console.ReadLine());
+                                    var item = DBReader.GetItem(Console.ReadLine());
 
                                     items[item.item] = new List<int>();
 
@@ -125,7 +125,7 @@ namespace Exercise0009
                                 }
                             }
 
-                            InsertOrder(customer.name, items);
+                            DBWriter.InsertOrder(customer.name, items);
 
                         }
                         catch (ArgumentOutOfRangeException)
@@ -149,15 +149,6 @@ namespace Exercise0009
                     default:
                         break;
                 }
-            }
-        }
-
-        static void InsertUser(string utente, string psw)
-        {
-            using (var connection = new ordersEntities())
-            {
-                connection.users.Add(new users() { username = utente, psw = psw});
-                connection.SaveChanges();
             }
         }
 
@@ -246,60 +237,6 @@ namespace Exercise0009
             }
         }
 
-        static List<Dictionary<string, string>> GetOrders()
-        {
-            var res = new List<Dictionary<string, string>>();
-            using (var connection = new ordersEntities())
-            {
-                foreach (var record in connection.orders)
-                {
-                    try
-                    {
-                        var item = new Dictionary<string, string>();
-                        var tot = 0;
-                        foreach(var order in connection.orderitems.Where(x => x.orderid == record.orderid))
-                        {
-                            tot += order.price*order.qty;
-                        }
-                        item["id"] = record.orderid.ToString();
-                        item["customer"] = record.customers.name;
-                        item["order date"] = record.orderdate.ToString();
-                        item["total"] = tot.ToString();
-                        res.Add(item);
-                    }
-                    catch
-                    {
-                        connection.orders.Remove(record);
-                    }
-                }
-                connection.SaveChanges();
-            }
-
-            return res;
-        }
-
-        static List<Dictionary<string, string>> GetOrderSpecifics(int id)
-        {
-            var res = new List<Dictionary<string, string>>();
-
-            using (var connection = new ordersEntities())
-            {
-                var record = connection.orders.Find(id);
-
-                foreach (var order in connection.orderitems.Where(x => x.orderid == record.orderid))
-                {
-                    var item = new Dictionary<string, string>();
-                    item["customer"] = record.customers.name;
-                    item["order date"] = record.orderdate.ToString();
-                    item["item"] = order.itemname;
-                    item["quantity"] = order.qty.ToString();
-                    item["price"] = order.price.ToString();
-                    res.Add(item);
-                }
-            }
-            return res;
-        }
-
         static void WriteRecord(ICollection<Dictionary<string, string>> records)
         {
             foreach (var record in records)
@@ -324,51 +261,6 @@ namespace Exercise0009
                 Console.WriteLine($"quantity = {record["quantity"]}");
                 Console.WriteLine($"price = {record["price"]}");
                 Console.WriteLine();
-            }
-        }
-
-        static customers GetCustomer(string customer)
-        {
-            customers res;
-
-            using (var connection = new ordersEntities())
-            {
-                res = connection.customers.Find(customer);
-            }
-            return res == null ? throw new ArgumentOutOfRangeException() : res;
-        }
-
-        static items GetItem(string item)
-        {
-            items res;
-
-            using (var connection = new ordersEntities())
-            {
-                res = connection.items.Find(item);
-            }
-            return res == null ? throw new ArgumentOutOfRangeException() : res;
-        }
-
-        static void InsertOrder(string customer, Dictionary<string, List<int>> items)
-        {
-            using (var connection = new ordersEntities())
-            {
-                int i = connection.orders.OrderByDescending(x => x.orderid).FirstOrDefault().orderid + 1;
-
-                connection.orders.Add(new orders() {orderid = i, customername = customer , orderdate = DateTime.Now});
-
-                foreach (var key in items.Keys)
-                {
-                    var qty = items[key][0];
-                    var price = items[key][1];
-
-                    if (qty < 1 || price < 0)
-                    {
-                        throw new ArgumentException();
-                    }
-                    connection.orderitems.Add(new orderitems() { orderid = i, itemname = key, qty = qty, price = price });
-                }
-                connection.SaveChanges();
             }
         }
     }

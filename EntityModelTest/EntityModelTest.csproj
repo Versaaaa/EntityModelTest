@@ -58,6 +58,8 @@
     <Compile Include="customers.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
+    <Compile Include="DBReader.cs" />
+    <Compile Include="DBWriter.cs" />
     <Compile Include="items.cs">
       <DependentUpon>Model1.tt</DependentUpon>
     </Compile>
